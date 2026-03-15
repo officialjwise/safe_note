@@ -3,7 +3,11 @@
     "ignoreDeprecations": "6.0",
     "target": "ES2020",
     "jsx": "react",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -25,29 +29,77 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["react", "react-native"],
+    "types": [
+      "react",
+      "react-native"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@screens": ["src/screens"],
-      "@screens/*": ["src/screens/*"],
-      "@components": ["src/components"],
-      "@components/*": ["src/components/*"],
-      "@navigation": ["src/navigation"],
-      "@navigation/*": ["src/navigation/*"],
-      "@store": ["src/store"],
-      "@store/*": ["src/store/*"],
-      "@services": ["src/services"],
-      "@services/*": ["src/services/*"],
-      "@hooks": ["src/hooks"],
-      "@hooks/*": ["src/hooks/*"],
-      "@utils": ["src/utils"],
-      "@utils/*": ["src/utils/*"],
-      "@types": ["src/types"],
-      "@types/*": ["src/types/*"],
-      "@constants": ["src/constants"],
-      "@constants/*": ["src/constants/*"]
+      "@screens": [
+        "src/screens"
+      ],
+      "@screens/*": [
+        "src/screens/*"
+      ],
+      "@components": [
+        "src/components"
+      ],
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@navigation": [
+        "src/navigation"
+      ],
+      "@navigation/*": [
+        "src/navigation/*"
+      ],
+      "@store": [
+        "src/store"
+      ],
+      "@store/*": [
+        "src/store/*"
+      ],
+      "@services": [
+        "src/services"
+      ],
+      "@services/*": [
+        "src/services/*"
+      ],
+      "@hooks": [
+        "src/hooks"
+      ],
+      "@hooks/*": [
+        "src/hooks/*"
+      ],
+      "@utils": [
+        "src/utils"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@types": [
+        "src/types"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ],
+      "@constants": [
+        "src/constants"
+      ],
+      "@constants/*": [
+        "src/constants/*"
+      ]
     }
   },
-  "include": ["src", "App.tsx", "index.ts"],
-  "exclude": ["node_modules", "dist", "build"]
+  "include": [
+    "src",
+    "App.tsx",
+    "index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ],
+  "extends": "expo/tsconfig.base"
 }

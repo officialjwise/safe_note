@@ -2,7 +2,7 @@
   "name": "securenotes",
   "version": "1.0.0",
   "description": "Security-first React Native note-taking app with biometric authentication",
-  "main": "expo-router/build/index.js",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
