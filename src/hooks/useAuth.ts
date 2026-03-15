@@ -49,3 +49,4 @@ export const useAuth = () => {
     clearErrorMessage,
   };
 };
+// Authentication hook for managing user sessions
