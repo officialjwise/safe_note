@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "SecureNotes",
+    "slug": "securenotes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A1628"
+    },
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.securenotes.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "We use Face ID to unlock your secure notes",
+        "NSLocalNetworkUsageDescription": "We need local network access for synchronization",
+        "NSBonjourServiceTypes": [
+          "_http._tcp",
+          "_https._tcp"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A1628"
+      },
+      "package": "com.securenotes.app",
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [],
+    "extra": {
+      "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}"
+    },
+    "scheme": "securenotes",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  }
+}
