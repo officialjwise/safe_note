@@ -108,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Button;
+export default Button;// Button component with multiple variants
