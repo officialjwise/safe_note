@@ -192,3 +192,4 @@ const notesSlice = createSlice({
 
 export const { setSelectedNote, clearSelectedNote, clearSearchResults } = notesSlice.actions;
 export default notesSlice.reducer;
+// Redux state management for notes
