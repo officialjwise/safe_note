@@ -64,3 +64,4 @@ export const useBiometrics = () => {
     failureCount,
   };
 };
+// Biometric authentication handling
