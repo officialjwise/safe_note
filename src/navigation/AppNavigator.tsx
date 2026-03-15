@@ -108,4 +108,4 @@ const RootNavigator: React.FC = () => {
   );
 };
 
-export default RootNavigator;
+export default RootNavigator;// Navigation state management and inactivity handling
