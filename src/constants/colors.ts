@@ -24,3 +24,4 @@ export const COLORS = {
 export const OPACITY = {
   pressedState: 0.85,
 } as const;
+// Design system constants
