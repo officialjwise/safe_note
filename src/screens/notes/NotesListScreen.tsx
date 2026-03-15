@@ -218,3 +218,4 @@ const styles = StyleSheet.create({
 });
 
 export default NotesListScreen;
+// Notes list display with search functionality
