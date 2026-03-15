@@ -21,15 +21,17 @@ interface ButtonProps {
 }
 
 const Button: React.FC<ButtonProps> = ({
-  onPress,
-  title,
+  onPress: onPressProp,
+  title: titleProp,
   variant = 'primary',
   loading = false,
   disabled = false,
   fullWidth = true,
   size = 'regular',
   style,
-}) => {
+}: ButtonProps): JSX.Element => {
+  const onPress = onPressProp;
+  const title = titleProp;
   const isDisabled = disabled || loading;
   const [pressed, setPressed] = useState(false);
 

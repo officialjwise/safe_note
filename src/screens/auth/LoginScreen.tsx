@@ -23,7 +23,7 @@ type RootStackParamList = {
 
 type LoginScreenProps = StackScreenProps<RootStackParamList, 'Login'>;
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }): JSX.Element => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }: LoginScreenProps) => {
   const dispatch = useAppDispatch();
   const { login, loading, error, clearErrorMessage } = useAuth();
 

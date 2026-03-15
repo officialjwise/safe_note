@@ -14,14 +14,18 @@ interface ScreenHeaderProps {
 }
 
 const ScreenHeader: React.FC<ScreenHeaderProps> = ({
-  title,
-  onBackPress,
+  title: titleProp,
+  onBackPress: onBackPressProp,
   rightIcon,
-  onRightIconPress,
+  onRightIconPress: onRightPressProp,
   subtitle,
-  style,
+  style: styleProp,
   showBackButton = true,
-}) => {
+}): JSX.Element => {
+  const title = titleProp;
+  const onBackPress = onBackPressProp;
+  const onRightIconPress = onRightPressProp;
+  const style = styleProp;
   return (
     <View style={[styles.header, style]}>
       <View style={styles.leftContainer}>

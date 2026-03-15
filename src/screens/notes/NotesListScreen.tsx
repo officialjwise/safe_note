@@ -13,6 +13,7 @@ import { NoteCard, SearchBar } from '@components/notes';
 import { LoadingSpinner, ScreenHeader } from '@components/shared';
 import { EmptyState } from '@components/ui';
 import { COLORS, SPACING, PADDING } from '@constants';
+import type { Note } from '@types';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 type NotesStackParamList = {
@@ -23,7 +24,7 @@ type NotesStackParamList = {
 
 type NotesListScreenProps = StackScreenProps<NotesStackParamList, 'NotesList'>;
 
-const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }): JSX.Element => {
+const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }: NotesListScreenProps) => {
   const { notes, searchResults, loading, fetchNotes, searchNotes } = useNotes();
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -120,8 +121,8 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }): JSX.El
       ) : (
         <FlatList
           data={displayNotes}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          keyExtractor={(item: Note) => item.id}
+          renderItem={({ item }: { item: Note }) => (
             <View style={styles.cardWrapper}>
               <NoteCard
                 title={item.title}
@@ -147,7 +148,7 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }): JSX.El
 
       {/* Floating Action Button */}
       <Pressable
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+        style={({ pressed }: { pressed: boolean }) => [styles.fab, pressed && styles.fabPressed]}
         onPress={handleCreateNote}
       >
         <MaterialCommunityIcons

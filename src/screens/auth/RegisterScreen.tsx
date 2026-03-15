@@ -23,7 +23,7 @@ type RootStackParamList = {
 
 type RegisterScreenProps = StackScreenProps<RootStackParamList, 'Register'>;
 
-const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }): JSX.Element => {
+const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterScreenProps) => {
   const { register, loading, error, clearErrorMessage } = useAuth();
 
   const [email, setEmail] = useState('');
