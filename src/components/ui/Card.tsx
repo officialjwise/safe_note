@@ -7,7 +7,7 @@ interface CardProps {
   style?: ViewStyle;
 }
 
-const Card: React.FC<CardProps> = ({ children, style }): JSX.Element => {
+const Card: React.FC<CardProps> = ({ children, style }): React.JSX.Element => {
   return (
     <View
       style={[

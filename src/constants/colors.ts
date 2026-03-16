@@ -17,8 +17,13 @@ export const COLORS = {
   
   // Text
   textPrimary: '#FFFFFF',
+  text: '#FFFFFF', // Alias for textPrimary
   textSecondary: '#CBD5E1',
   textMuted: '#94A3B8',
+  
+  // Borders & Backgrounds
+  border: '#334155',
+  inputBackground: '#1E293B',
 } as const;
 
 export const OPACITY = {

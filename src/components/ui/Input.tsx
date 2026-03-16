@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   TextInput,
@@ -8,7 +8,7 @@ import {
   ViewStyle,
   TextInputProps,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, TYPOGRAPHY } from '@constants';
 
 interface InputProps extends TextInputProps {
@@ -32,6 +32,10 @@ const Input: React.FC<InputProps> = ({
   const [isSecure, setIsSecure] = useState(secureText);
   const [isFocused, setIsFocused] = useState(false);
 
+  useEffect(() => {
+    setIsSecure(secureText);
+  }, [secureText]);
+
   const hasError = !!errorMessage;
   const borderColor = isFocused ? COLORS.info : hasError ? COLORS.destructive : COLORS.elevatedSurface;
 
@@ -42,7 +46,7 @@ const Input: React.FC<InputProps> = ({
       <View style={styles.inputWrapper}>
         <TextInput
           {...textInputProps}
-          secureTextEntry={isSecure}
+          secureTextEntry={secureText ? isSecure : false}
           style={[
             styles.input,
             {
@@ -53,6 +57,7 @@ const Input: React.FC<InputProps> = ({
             style,
           ]}
           placeholderTextColor={COLORS.textMuted}
+          autoCorrect={textInputProps.autoCorrect ?? false}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />

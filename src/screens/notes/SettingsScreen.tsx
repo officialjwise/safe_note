@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, Switch, SafeAreaView, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, Switch, SafeAreaView, Alert, Pressable } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@hooks/useAuth';
 import { useBiometrics } from '@hooks/useBiometrics';
@@ -7,14 +8,11 @@ import { Button, Card } from '@components/ui';
 import { ScreenHeader, ConfirmDialog } from '@components/shared';
 import { COLORS, SPACING, TYPOGRAPHY, PADDING } from '@constants';
 import type { StackScreenProps } from '@react-navigation/stack';
-
-type SettingsStackParamList = {
-  SettingsMain: undefined;
-};
+import type { SettingsStackParamList } from '@navigation/MainNavigator';
 
 type SettingsScreenProps = StackScreenProps<SettingsStackParamList, 'SettingsMain'>;
 
-const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }): JSX.Element => {
+const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }): React.JSX.Element => {
   const { user, logout } = useAuth();
   const { isAvailable: isBiometricAvailable, biometricsType } = useBiometrics();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -57,6 +55,29 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }): JSX.Elem
   const handleLogout = async () => {
     setShowLogoutDialog(false);
     await logout();
+  };
+
+  const handleChangePassword = () => {
+    navigation.navigate('ChangePassword');
+  };
+
+  const handleForgotPassword = () => {
+    // Navigate to the auth stack's ForgotPassword screen
+    // We'll need to navigate through the app navigator
+    Alert.alert(
+      'Reset Password',
+      'You will be logged out to reset your password. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          onPress: async () => {
+            await logout();
+            // The app will navigate to Auth screen automatically
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -122,10 +143,35 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }): JSX.Elem
           )}
 
           <Card style={styles.card}>
-            <View style={styles.settingRow}>
-              <Text style={styles.label}>Change Password</Text>
-            </View>
-            <Text style={styles.comingSoon}>Coming soon</Text>
+            <Pressable onPress={handleChangePassword}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingLabel}>
+                  <Text style={styles.label}>Change Password</Text>
+                  <Text style={styles.description}>Update your password</Text>
+                </View>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={COLORS.textMuted}
+                />
+              </View>
+            </Pressable>
+          </Card>
+
+          <Card style={styles.card}>
+            <Pressable onPress={handleForgotPassword}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingLabel}>
+                  <Text style={styles.label}>Forgot Password?</Text>
+                  <Text style={styles.description}>Reset your password</Text>
+                </View>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={COLORS.textMuted}
+                />
+              </View>
+            </Pressable>
           </Card>
         </View>
 
@@ -214,12 +260,6 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.caption,
     color: COLORS.textMuted,
     marginTop: SPACING.xs,
-  },
-  comingSoon: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textMuted,
-    fontStyle: 'italic',
-    marginTop: SPACING.md,
   },
   logoutButton: {
     marginTop: SPACING.lg,

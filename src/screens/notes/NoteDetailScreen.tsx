@@ -9,11 +9,14 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useNotes } from '@hooks/useNotes';
+import { useScreenshotProtection } from '@hooks/useScreenshotProtection';
+import { RichTextPreview } from '@components/notes';
 import { ConfirmDialog, ScreenHeader, LoadingSpinner } from '@components/shared';
 import { Button, EmptyState } from '@components/ui';
 import { formatters } from '@utils/formatters';
 import { COLORS, SPACING, TYPOGRAPHY, PADDING } from '@constants';
 import type { StackScreenProps } from '@react-navigation/stack';
+import type { Note } from '@types';
 
 type NotesStackParamList = {
   NotesList: undefined;
@@ -29,7 +32,7 @@ const NoteDetailScreen: React.FC<NoteDetailScreenProps> = ({ navigation, route }
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const note = notes.find((n) => n.id === noteId);
+  const note = notes.find((n: Note) => n.id === noteId);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -64,7 +67,7 @@ const NoteDetailScreen: React.FC<NoteDetailScreenProps> = ({ navigation, route }
       <SafeAreaView style={styles.container}>
         <ScreenHeader title="Note" onBackPress={() => navigation.goBack()} />
         <EmptyState
-          iconName="file-not-found"
+          iconName="file-alert-outline"
           heading="Note not found"
           subtext="This note may have been deleted"
           ctaLabel="Go Back"
@@ -102,7 +105,7 @@ const NoteDetailScreen: React.FC<NoteDetailScreenProps> = ({ navigation, route }
         </View>
 
         <View style={styles.bodyContainer}>
-          <Text style={styles.body}>{note.body}</Text>
+          <RichTextPreview content={note.body} textStyle={styles.body} />
         </View>
 
         <View style={styles.deleteButtonContainer}>

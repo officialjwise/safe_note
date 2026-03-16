@@ -10,8 +10,7 @@ import MainNavigator from './MainNavigator';
 import { BiometricPrompt, LoadingSpinner } from '@components/shared';
 import { COLORS } from '@constants';
 
-// AsyncStorage removed — auth state comes from the secure token store
-// via useAuth (react-native-keychain), not from AsyncStorage directly.
+// Auth state is local-only in this build and managed via Redux + AsyncStorage.
 
 const Stack = createStackNavigator();
 
@@ -22,8 +21,7 @@ const RootNavigator: React.FC = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isBiometricAuthenticating, setIsBiometricAuthenticating] = useState(false);
 
-  // Check for a valid stored token on cold start.
-  // useAuth.checkAuth reads from react-native-keychain — no AsyncStorage needed.
+  // Check for an active local session on cold start.
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -45,7 +43,7 @@ const RootNavigator: React.FC = () => {
   }, [isAuthenticated, shouldShowBiometricPrompt, isAvailable]);
 
   const handleInactivityTimeout = () => {
-    // useAuth.logout clears Keychain tokens and resets Redux state,
+    // useAuth.logout clears local session and resets Redux state,
     // which flips isAuthenticated → false and drives navigation automatically.
   };
 

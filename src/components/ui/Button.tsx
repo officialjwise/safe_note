@@ -6,6 +6,7 @@ import {
   ViewStyle,
   ActivityIndicator,
   View,
+  StyleProp,
 } from 'react-native';
 import { COLORS, SPACING } from '@constants';
 
@@ -17,7 +18,7 @@ interface ButtonProps {
   disabled?: boolean;
   fullWidth?: boolean;
   size?: 'regular' | 'small';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -29,7 +30,7 @@ const Button: React.FC<ButtonProps> = ({
   fullWidth = true,
   size = 'regular',
   style,
-}: ButtonProps): JSX.Element => {
+}: ButtonProps): React.JSX.Element => {
   const onPress = onPressProp;
   const title = titleProp;
   const isDisabled = disabled || loading;

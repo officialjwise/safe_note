@@ -1,0 +1,1 @@
+"""SecureNotes backend application package."""

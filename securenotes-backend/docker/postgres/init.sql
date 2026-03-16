@@ -1,0 +1,38 @@
+\c postgres;
+
+CREATE DATABASE securenotes_db
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.utf8'
+    LC_CTYPE = 'en_US.utf8'
+    TEMPLATE = template0;
+
+CREATE USER securenotes_app WITH
+    PASSWORD 'development_app_password_1234567890'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    LOGIN;
+
+GRANT CONNECT ON DATABASE securenotes_db TO securenotes_app;
+
+\c securenotes_db;
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+GRANT USAGE ON SCHEMA public TO securenotes_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO securenotes_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO securenotes_app;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO securenotes_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO securenotes_app;
+
+CREATE SCHEMA IF NOT EXISTS audit;
+GRANT USAGE ON SCHEMA audit TO securenotes_app;
+GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA audit TO securenotes_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA audit
+    GRANT SELECT, INSERT ON TABLES TO securenotes_app;

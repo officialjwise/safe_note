@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { biometricService, type BiometricAvailability } from '@services/biometricService';
 
 export const useBiometrics = () => {
@@ -7,15 +8,22 @@ export const useBiometrics = () => {
   });
   const [isChecking, setIsChecking] = useState(true);
   const [failureCount, setFailureCount] = useState(0);
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
   useEffect(() => {
     const checkBiometricAvailability = async () => {
       try {
-        const result = await biometricService.isBiometricAvailable();
+        const [result, savedPreference] = await Promise.all([
+          biometricService.isBiometricAvailable(),
+          AsyncStorage.getItem('biometric_enabled'),
+        ]);
+
         setAvailability(result);
+        setIsBiometricEnabled(savedPreference === 'true');
       } catch (error) {
         console.error('Failed to check biometric availability:', error);
         setAvailability({ available: false });
+        setIsBiometricEnabled(false);
       } finally {
         setIsChecking(false);
       }
@@ -53,7 +61,8 @@ export const useBiometrics = () => {
     }
   }, [availability, failureCount]);
 
-  const shouldShowBiometricPrompt = availability.available && failureCount < 3;
+  const shouldShowBiometricPrompt =
+    availability.available && isBiometricEnabled && failureCount < 3;
 
   return {
     isAvailable: availability.available,
@@ -62,6 +71,7 @@ export const useBiometrics = () => {
     authenticate,
     shouldShowBiometricPrompt,
     failureCount,
+    isBiometricEnabled,
   };
 };
 // Biometric authentication handling

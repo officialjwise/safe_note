@@ -1,18 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import MCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, TYPOGRAPHY } from '@constants';
 import Button from './Button';
-
-// react-native-vector-icons doesn't ship declaration files that satisfy
-// strict JSX element typing out of the box. Casting to any and re-typing
-// through a local wrapper is the standard fix without ejecting to a fork.
-const Icon = MCI as React.ComponentType<{
-  name: string;
-  size: number;
-  color: string;
-  style?: object;
-}>;
 
 interface EmptyStateProps {
   iconName: string;
@@ -34,8 +24,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <View style={[styles.container, style]}>
       <View style={styles.content}>
-        <Icon
-          name={iconName}
+        <MaterialCommunityIcons
+          name={iconName as any}
           size={64}
           color={COLORS.textSecondary}
           style={styles.icon}

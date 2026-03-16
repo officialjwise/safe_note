@@ -2,11 +2,12 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RouteProp } from '@react-navigation/native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NotesListScreen from '@screens/notes/NotesListScreen';
 import NoteDetailScreen from '@screens/notes/NoteDetailScreen';
 import NoteEditorScreen from '@screens/notes/NoteEditorScreen';
 import SettingsScreen from '@screens/notes/SettingsScreen';
+import ChangePasswordScreen from '@screens/notes/ChangePasswordScreen';
 import { COLORS, TYPOGRAPHY } from '@constants';
 
 export type NotesStackParamList = {
@@ -17,6 +18,7 @@ export type NotesStackParamList = {
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
+  ChangePassword: undefined;
 };
 
 export type MainTabParamList = {
@@ -62,6 +64,11 @@ const SettingsNavigator: React.FC = () => {
         component={SettingsScreen}
         options={{ title: 'Settings' }}
       />
+      <SettingsStack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ title: 'Change Password' }}
+      />
     </SettingsStack.Navigator>
   );
 };
@@ -83,7 +90,7 @@ const MainNavigator: React.FC = () => {
           }
 
           return (
-            <MaterialCommunityIcons name={iconName} size={size} color={color} />
+            <MaterialCommunityIcons name={iconName as any} size={size} color={color} />
           );
         },
         tabBarActiveTintColor: COLORS.accent,

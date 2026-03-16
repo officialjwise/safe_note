@@ -64,11 +64,11 @@ export const useInactivityTimer = (onTimeout: () => void, enabled: boolean = tru
 
   // Create PanResponder for touch detection
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => {
+    onStartShouldSetPanResponderCapture: () => {
       resetTimer();
       return false;
     },
-    onMoveShouldSetPanResponder: () => {
+    onMoveShouldSetPanResponderCapture: () => {
       resetTimer();
       return false;
     },

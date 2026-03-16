@@ -1,0 +1,17 @@
+.env
+.env.test
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+.git/
+.gitignore
+README.md
+tests/
+docker-compose.override.yml

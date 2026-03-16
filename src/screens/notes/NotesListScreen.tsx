@@ -7,7 +7,7 @@ import {
   RefreshControl,
   SafeAreaView,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNotes } from '@hooks/useNotes';
 import { NoteCard, SearchBar } from '@components/notes';
 import { LoadingSpinner, ScreenHeader } from '@components/shared';
@@ -66,7 +66,7 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }: NotesLi
   };
 
   const handleNavigateToSettings = () => {
-    navigation.getParent()?.navigate('Settings');
+    navigation.getParent()?.navigate('SettingsTab');
   };
 
   const renderEmptyState = () => {
@@ -113,7 +113,7 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }: NotesLi
       {loading && displayNotes.length === 0 ? (
         <View style={styles.loadingContainer}>
           {[1, 2, 3].map((i) => (
-            <View testID={`skeleton-${i}`} style={styles.skeletonWrapper}>
+            <View key={i} testID={`skeleton-${i}`} style={styles.skeletonWrapper}>
               {renderSkeletonCard()}
             </View>
           ))}

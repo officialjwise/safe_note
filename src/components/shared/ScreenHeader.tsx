@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, TYPOGRAPHY, PADDING } from '@constants';
 
 interface ScreenHeaderProps {
@@ -21,7 +21,7 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   subtitle,
   style: styleProp,
   showBackButton = true,
-}): JSX.Element => {
+}): React.JSX.Element => {
   const title = titleProp;
   const onBackPress = onBackPressProp;
   const onRightIconPress = onRightPressProp;
@@ -49,7 +49,7 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = ({
         {rightIcon && onRightIconPress && (
           <Pressable onPress={onRightIconPress} style={styles.rightButton}>
             <MaterialCommunityIcons
-              name={rightIcon}
+              name={rightIcon as any}
               size={24}
               color={COLORS.textPrimary}
             />

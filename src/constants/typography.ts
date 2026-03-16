@@ -4,6 +4,11 @@ export const TYPOGRAPHY = {
     fontWeight: '700' as const,
     lineHeight: 32,
   },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    lineHeight: 24,
+  },
   sectionHeader: {
     fontSize: 18,
     fontWeight: '600' as const,

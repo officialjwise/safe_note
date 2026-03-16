@@ -1,7 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import api from '@services/api';
-import { tokenStorage } from '@utils/tokenStorage';
-import type { User, LoginRequest, RegisterRequest, LoginResponse } from '@types';
+import type { User, LoginRequest, RegisterRequest } from '@types';
+import { apiClient } from '@services/apiClient';
 
 export interface AuthState {
   user: User | null;
@@ -10,6 +10,8 @@ export interface AuthState {
   error: string | null;
 }
 
+const STORAGE_KEY_SESSION_USER = 'securenotes_session_user';
+
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
@@ -17,18 +19,33 @@ const initialState: AuthState = {
   error: null,
 };
 
+// Helper to create User object from email and server response
+const createUserFromEmail = (email: string, id?: string): User => ({
+  id: id || `user_${Date.now()}`,
+  email: email.trim().toLowerCase(),
+  createdAt: new Date().toISOString(),
+});
+
 export const loginThunk = createAsyncThunk(
   'auth/login',
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      const response = await api.post<LoginResponse>('/v1/auth/login', credentials);
-      const { accessToken, refreshToken, user } = response.data;
+      const response = await apiClient.login(
+        credentials.email.trim().toLowerCase(),
+        credentials.password
+      );
 
-      await tokenStorage.setTokens(accessToken, refreshToken);
+      if (response.error || !response.data) {
+        return rejectWithValue(response.error || 'Login failed');
+      }
 
-      return { user, accessToken, refreshToken };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      // Create user object from login email (server will return user data in future versions)
+      const user = createUserFromEmail(credentials.email);
+      await AsyncStorage.setItem(STORAGE_KEY_SESSION_USER, JSON.stringify(user));
+      
+      return { user };
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Login failed');
     }
   }
 );
@@ -37,51 +54,62 @@ export const registerThunk = createAsyncThunk(
   'auth/register',
   async (credentials: RegisterRequest, { rejectWithValue }) => {
     try {
-      const response = await api.post<LoginResponse>('/v1/auth/register', credentials);
-      const { accessToken, refreshToken, user } = response.data;
+      const response = await apiClient.register(
+        credentials.email.trim().toLowerCase(),
+        credentials.password
+      );
 
-      await tokenStorage.setTokens(accessToken, refreshToken);
+      if (response.error) {
+        return rejectWithValue(response.error || 'Registration failed');
+      }
 
-      return { user, accessToken, refreshToken };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      // After successful registration, login with the same credentials
+      const loginResponse = await apiClient.login(
+        credentials.email.trim().toLowerCase(),
+        credentials.password
+      );
+
+      if (loginResponse.error || !loginResponse.data) {
+        return rejectWithValue('Account created but login failed - try logging in');
+      }
+
+      const user = createUserFromEmail(credentials.email);
+      await AsyncStorage.setItem(STORAGE_KEY_SESSION_USER, JSON.stringify(user));
+      
+      return { user };
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Registration failed');
     }
   }
 );
+
+export const logoutThunk = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+  try {
+    await apiClient.logout();
+    await AsyncStorage.removeItem(STORAGE_KEY_SESSION_USER);
+    return null;
+  } catch (error) {
+    // Even if logout API fails, clear local session
+    await AsyncStorage.removeItem(STORAGE_KEY_SESSION_USER);
+    return null;
+  }
+});
 
 export const refreshTokenThunk = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const refreshToken = await tokenStorage.getRefreshToken();
-      if (!refreshToken) {
-        return rejectWithValue('No refresh token available');
+      // Try to refresh via API
+      // The apiClient automatically handles token refresh via interceptors
+      const currentSession = await AsyncStorage.getItem(STORAGE_KEY_SESSION_USER);
+      if (!currentSession) {
+        return rejectWithValue('No active session');
       }
 
-      const response = await api.post('/v1/auth/refresh', {
-        refresh_token: refreshToken,
-      });
-
-      const { accessToken, refreshToken: newRefreshToken } = response.data;
-      await tokenStorage.setTokens(accessToken, newRefreshToken);
-
-      return { accessToken, refreshToken: newRefreshToken };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Token refresh failed');
-    }
-  }
-);
-
-export const logoutThunk = createAsyncThunk(
-  'auth/logout',
-  async (_, { rejectWithValue }) => {
-    try {
-      await api.post('/v1/auth/logout');
-      await tokenStorage.clearTokens();
-      return null;
-    } catch (error: any) {
-      await tokenStorage.clearTokens();
-      return null;
+      const user = JSON.parse(currentSession) as User;
+      return { user };
+    } catch {
+      return rejectWithValue('Token refresh failed');
     }
   }
 );
@@ -90,16 +118,18 @@ export const checkAuthThunk = createAsyncThunk(
   'auth/checkAuth',
   async (_, { rejectWithValue }) => {
     try {
-      const tokens = await tokenStorage.getTokens();
-      if (!tokens) {
-        return rejectWithValue('No tokens found');
+      // Load tokens from secure storage
+      await apiClient.loadTokens();
+      
+      // Check if session exists locally
+      const sessionData = await AsyncStorage.getItem(STORAGE_KEY_SESSION_USER);
+      if (!sessionData) {
+        return rejectWithValue('No active session');
       }
 
-      // Verify tokens are still valid by making a minimal API call
-      const response = await api.get('/v1/auth/me');
-      return response.data;
-    } catch (error: any) {
-      await tokenStorage.clearTokens();
+      const user = JSON.parse(sessionData) as User;
+      return { user };
+    } catch {
       return rejectWithValue('Auth check failed');
     }
   }
@@ -117,7 +147,6 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Login
     builder
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
@@ -133,10 +162,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         state.isAuthenticated = false;
-      });
-
-    // Register
-    builder
+      })
       .addCase(registerThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -151,10 +177,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         state.isAuthenticated = false;
-      });
-
-    // Logout
-    builder
+      })
       .addCase(logoutThunk.pending, (state) => {
         state.loading = true;
       })
@@ -168,24 +191,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
-      });
-
-    // Refresh Token
-    builder
-      .addCase(refreshTokenThunk.pending, (state) => {
-        // Don't set loading to true for refresh
       })
-      .addCase(refreshTokenThunk.fulfilled, (state) => {
-        state.error = null;
-      })
-      .addCase(refreshTokenThunk.rejected, (state, action) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.error = action.payload as string;
-      });
-
-    // Check Auth
-    builder
       .addCase(checkAuthThunk.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
@@ -193,6 +199,20 @@ const authSlice = createSlice({
       })
       .addCase(checkAuthThunk.rejected, (state) => {
         state.user = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(refreshTokenThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(refreshTokenThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(refreshTokenThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
         state.isAuthenticated = false;
       });
   },

@@ -1,6 +1,4 @@
-import ReactNativeBiometrics from 'react-native-biometrics';
-
-const rnBiometrics = new ReactNativeBiometrics();
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export interface BiometricAvailability {
   available: boolean;
@@ -10,21 +8,25 @@ export interface BiometricAvailability {
 export const biometricService = {
   async isBiometricAvailable(): Promise<BiometricAvailability> {
     try {
-      const result = await rnBiometrics.isSensorAvailable();
-      
-      if (!result.available) {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
         return { available: false };
       }
 
+      const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+      const biometricsType = supportedTypes.includes(
+        LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION
+      )
+        ? 'FaceID'
+        : supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)
+        ? 'Fingerprint'
+        : 'Iris';
+
       return {
         available: true,
-        biometricsType: result.biometryType === 'FaceID'
-          ? 'FaceID'
-          : result.biometryType === 'TouchID'
-          ? 'Fingerprint'
-          : result.biometryType === 'Biometrics'
-          ? 'Fingerprint'
-          : 'Iris',
+        biometricsType,
       };
     } catch (error) {
       console.error('Error checking biometric availability:', error);
@@ -34,12 +36,13 @@ export const biometricService = {
 
   async authenticate(reason: string = 'Unlock SecureNotes'): Promise<boolean> {
     try {
-      const result = await rnBiometrics.simplePrompt({
+      const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason,
-        fallbackPromptMessage: 'Use your PIN instead',
+        fallbackLabel: 'Use Password',
+        disableDeviceFallback: false,
       });
 
-      return result.success === true;
+      return result.success;
     } catch (error) {
       console.error('Biometric authentication failed:', error);
       return false;
@@ -47,26 +50,6 @@ export const biometricService = {
   },
 
   async createSignature(reason: string = 'Authenticate'): Promise<string | null> {
-    try {
-      const result = await rnBiometrics.isSensorAvailable();
-      
-      if (!result.available) {
-        return null;
-      }
-
-      const signatureResult = await rnBiometrics.createSignature({
-        promptMessage: reason,
-        payload: new Date().toISOString(),
-      });
-
-      if (signatureResult.success) {
-        return signatureResult.signature || null;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Failed to create biometric signature:', error);
-      return null;
-    }
+    return null;
   },
 };

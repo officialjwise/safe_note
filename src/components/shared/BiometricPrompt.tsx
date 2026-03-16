@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, ActivityIndicator } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, TYPOGRAPHY } from '@constants';
 
 interface BiometricPromptProps {
@@ -89,7 +89,7 @@ const BiometricPrompt: React.FC<BiometricPromptProps> = ({
             disabled={loading}
             style={({ pressed }) => [styles.fallbackLink, pressed && styles.fallbackLinkPressed]}
           >
-            <Text style={styles.fallbackText}>Use PIN instead</Text>
+            <Text style={styles.fallbackText}>Use Password Instead</Text>
           </Pressable>
         </View>
       </View>

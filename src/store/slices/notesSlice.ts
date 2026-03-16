@@ -1,6 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '@services/api';
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from '@types';
+import { apiClient } from '@services/apiClient';
 
 export interface NotesState {
   notes: Note[];
@@ -10,6 +11,8 @@ export interface NotesState {
   error: string | null;
 }
 
+const NOTES_CACHE_KEY = 'securenotes_notes_cache';
+
 const initialState: NotesState = {
   notes: [],
   selectedNote: null,
@@ -18,14 +21,46 @@ const initialState: NotesState = {
   error: null,
 };
 
+const sortByUpdated = (notes: Note[]): Note[] => {
+  return [...notes].sort((a, b) => {
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+};
+
+// Convert API response to Note object
+const transformApiNote = (apiNote: any): Note => ({
+  id: apiNote.id,
+  title: apiNote.title,
+  body: apiNote.body, // API uses 'body'
+  createdAt: apiNote.created_at,
+  updatedAt: apiNote.updated_at,
+  userId: apiNote.user_id,
+});
+
 export const fetchNotesThunk = createAsyncThunk(
   'notes/fetchNotes',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<Note[]>('/v1/notes');
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch notes');
+      const response = await apiClient.getNotes();
+      
+      if (response.error || !response.data) {
+        // Fall back to cached notes if API fails
+        const cached = await AsyncStorage.getItem(NOTES_CACHE_KEY);
+        if (cached) {
+          return JSON.parse(cached) as Note[];
+        }
+        return rejectWithValue(response.error || 'Failed to fetch notes');
+      }
+
+      const notes = (response.data as any[]).map(transformApiNote);
+      const sorted = sortByUpdated(notes);
+      
+      // Cache the notes locally
+      await AsyncStorage.setItem(NOTES_CACHE_KEY, JSON.stringify(sorted));
+      
+      return sorted;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch notes');
     }
   }
 );
@@ -34,10 +69,23 @@ export const createNoteThunk = createAsyncThunk(
   'notes/createNote',
   async (noteData: CreateNoteRequest, { rejectWithValue }) => {
     try {
-      const response = await api.post<Note>('/v1/notes', noteData);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create note');
+      const response = await apiClient.createNote(noteData.title, noteData.body);
+
+      if (response.error || !response.data) {
+        return rejectWithValue(response.error || 'Failed to create note');
+      }
+
+      const note = transformApiNote(response.data);
+      
+      // Update cache
+      const cached = await AsyncStorage.getItem(NOTES_CACHE_KEY);
+      const notes = cached ? JSON.parse(cached) : [];
+      const updated = sortByUpdated([note, ...notes]);
+      await AsyncStorage.setItem(NOTES_CACHE_KEY, JSON.stringify(updated));
+      
+      return note;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to create note');
     }
   }
 );
@@ -49,10 +97,25 @@ export const updateNoteThunk = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.put<Note>(`/v1/notes/${id}`, noteData);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update note');
+      const response = await apiClient.updateNote(id, noteData.title, noteData.body);
+
+      if (response.error || !response.data) {
+        return rejectWithValue(response.error || 'Failed to update note');
+      }
+
+      const note = transformApiNote(response.data);
+      
+      // Update cache
+      const cached = await AsyncStorage.getItem(NOTES_CACHE_KEY);
+      const notes = cached ? JSON.parse(cached) : [];
+      const updated = sortByUpdated(
+        notes.map((n: Note) => (n.id === id ? note : n))
+      );
+      await AsyncStorage.setItem(NOTES_CACHE_KEY, JSON.stringify(updated));
+      
+      return note;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to update note');
     }
   }
 );
@@ -61,10 +124,23 @@ export const deleteNoteThunk = createAsyncThunk(
   'notes/deleteNote',
   async (id: string, { rejectWithValue }) => {
     try {
-      await api.delete(`/v1/notes/${id}`);
+      const response = await apiClient.deleteNote(id);
+
+      if (response.error) {
+        return rejectWithValue(response.error || 'Failed to delete note');
+      }
+
+      // Update cache
+      const cached = await AsyncStorage.getItem(NOTES_CACHE_KEY);
+      if (cached) {
+        const notes = JSON.parse(cached) as Note[];
+        const updated = notes.filter((n: Note) => n.id !== id);
+        await AsyncStorage.setItem(NOTES_CACHE_KEY, JSON.stringify(updated));
+      }
+      
       return id;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete note');
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete note');
     }
   }
 );
@@ -73,12 +149,34 @@ export const searchNotesThunk = createAsyncThunk(
   'notes/searchNotes',
   async (query: string, { rejectWithValue }) => {
     try {
-      const response = await api.get<Note[]>('/v1/notes/search', {
-        params: { q: query },
-      });
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to search notes');
+      const normalized = query.trim().toLowerCase();
+      if (!normalized) {
+        return [] as Note[];
+      }
+
+      // Try to search via API first
+      const response = await apiClient.searchNotes(query);
+      
+      if (response.data) {
+        const notes = (response.data as any[]).map(transformApiNote);
+        return sortByUpdated(notes);
+      }
+
+      // Fall back to local cache search
+      const cached = await AsyncStorage.getItem(NOTES_CACHE_KEY);
+      if (cached) {
+        const notes = JSON.parse(cached) as Note[];
+        const results = notes.filter((note) => {
+          const title = note.title.toLowerCase();
+          const body = note.body.toLowerCase();
+          return title.includes(normalized) || body.includes(normalized);
+        });
+        return sortByUpdated(results);
+      }
+
+      return [] as Note[];
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to search notes');
     }
   }
 );
@@ -98,7 +196,6 @@ const notesSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Fetch Notes
     builder
       .addCase(fetchNotesThunk.pending, (state) => {
         state.loading = true;
@@ -106,45 +203,33 @@ const notesSlice = createSlice({
       })
       .addCase(fetchNotesThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.notes = action.payload.sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
+        state.notes = action.payload;
       })
       .addCase(fetchNotesThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Create Note
-    builder
+      })
       .addCase(createNoteThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(createNoteThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.notes.unshift(action.payload);
+        state.notes = sortByUpdated([action.payload, ...state.notes]);
       })
       .addCase(createNoteThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Update Note
-    builder
+      })
       .addCase(updateNoteThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(updateNoteThunk.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.notes.findIndex((note) => note.id === action.payload.id);
-        if (index !== -1) {
-          state.notes[index] = action.payload;
-          state.notes = state.notes.sort(
-            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
-        }
+        state.notes = sortByUpdated(
+          state.notes.map((note) => (note.id === action.payload.id ? action.payload : note))
+        );
         if (state.selectedNote?.id === action.payload.id) {
           state.selectedNote = action.payload;
         }
@@ -152,10 +237,7 @@ const notesSlice = createSlice({
       .addCase(updateNoteThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Delete Note
-    builder
+      })
       .addCase(deleteNoteThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -170,10 +252,7 @@ const notesSlice = createSlice({
       .addCase(deleteNoteThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Search Notes
-    builder
+      })
       .addCase(searchNotesThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -192,4 +271,3 @@ const notesSlice = createSlice({
 
 export const { setSelectedNote, clearSelectedNote, clearSearchResults } = notesSlice.actions;
 export default notesSlice.reducer;
-// Redux state management for notes

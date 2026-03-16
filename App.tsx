@@ -6,7 +6,7 @@ import { store } from '@store';
 import { AppNavigator } from '@navigation';
 import { COLORS } from '@constants';
 
-const App: React.FC = (): JSX.Element => {
+const App: React.FC = (): React.JSX.Element => {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.primaryBackground }}>
       <Provider store={store}>
