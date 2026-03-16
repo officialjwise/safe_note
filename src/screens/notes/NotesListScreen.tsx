@@ -10,7 +10,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNotes } from '@hooks/useNotes';
 import { NoteCard, SearchBar } from '@components/notes';
-import { LoadingSpinner, ScreenHeader } from '@components/shared';
+import { ScreenHeader } from '@components/shared';
 import { EmptyState } from '@components/ui';
 import { COLORS, SPACING, PADDING } from '@constants';
 import type { Note } from '@types';
@@ -154,7 +154,6 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }: NotesLi
         />
       </Pressable>
 
-      <LoadingSpinner visible={loading && displayNotes.length > 0} />
     </SafeAreaView>
   );
 };

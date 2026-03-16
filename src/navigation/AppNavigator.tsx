@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, PanResponder } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '@hooks/useAuth';
-import { useInactivityTimer } from '@hooks/useInactivityTimer';
 import { useBiometrics } from '@hooks/useBiometrics';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
@@ -47,10 +46,6 @@ const RootNavigator: React.FC = () => {
     // which flips isAuthenticated → false and drives navigation automatically.
   };
 
-  // useInactivityTimer returns a PanResponder instance, not its handlers directly.
-  // Spread panResponder.panHandlers onto the View, not the responder object itself.
-  const panResponder = useInactivityTimer(handleInactivityTimeout, isAuthenticated);
-
   const handleBiometricAuth = async () => {
     setIsBiometricAuthenticating(true);
     try {
@@ -69,13 +64,12 @@ const RootNavigator: React.FC = () => {
     setShowBiometricPrompt(false);
   };
 
-  if (isCheckingAuth || loading) {
+  if (isCheckingAuth) {
     return <LoadingSpinner visible={true} />;
   }
 
   return (
-    // Spread .panResponders (the actual gesture callbacks) not the responder object.
-    <View style={{ flex: 1 }} {...panResponder.panResponders}>
+    <View style={{ flex: 1 }}>
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{
