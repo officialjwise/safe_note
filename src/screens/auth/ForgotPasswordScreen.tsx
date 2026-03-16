@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -10,12 +10,14 @@ import {
   Platform,
   Animated,
   Easing,
+  useWindowDimensions,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button, Input } from '@components/ui';
 import { LoadingSpinner } from '@components/shared';
 import { validators } from '@utils/validators';
 import { COLORS, SPACING, TYPOGRAPHY, PADDING } from '@constants';
+import { responsivePadding, spacing, getKeyboardOffset, responsiveFontSize } from '@utils/responsive';
 import { apiClient } from '@services/apiClient';
 import type { StackScreenProps } from '@react-navigation/stack';
 import type { AuthStackParamList } from '@navigation/AuthNavigator';
@@ -23,6 +25,8 @@ import type { AuthStackParamList } from '@navigation/AuthNavigator';
 type ForgotPasswordScreenProps = StackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }: ForgotPasswordScreenProps) => {
+  const dimensions = useWindowDimensions();
+  
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [isEmailFocused, setIsEmailFocused] = useState(false);
@@ -32,25 +36,36 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(32)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 520,
+        duration: 500,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 520,
+        duration: 500,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fadeAnim, slideAnim]);
 
-  const validateEmail = (value: string) => {
+    return () => {
+      // Cleanup any ongoing animations
+    };
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      triggerShake();
+    }
+  }, [error]);
+
+  const validateEmail = useCallback((value: string) => {
     if (!value.trim()) {
       setEmailError('Email is required');
     } else if (!validators.isValidEmail(value)) {
@@ -58,14 +73,26 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
     } else {
       setEmailError('');
     }
-  };
+  }, []);
 
-  const handleEmailChange = (text: string) => {
+  const handleEmailChange = useCallback((text: string) => {
     setEmail(text);
-    if (text.trim()) validateEmail(text);
-  };
+    if (emailError && text.trim()) {
+      validateEmail(text);
+    }
+  }, [emailError, validateEmail]);
 
-  const handleRequestReset = async () => {
+  const triggerShake = useCallback(() => {
+    shakeAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 75, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 75, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 5, duration: 75, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 75, easing: Easing.linear, useNativeDriver: true }),
+    ]).start();
+  }, [shakeAnim]);
+
+  const handleRequestReset = useCallback(async () => {
     Keyboard.dismiss();
     setError('');
 
@@ -81,35 +108,40 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
 
     setLoading(true);
     try {
-      const response = await apiClient.requestPasswordReset(email);
+      const response = await apiClient.requestPasswordReset(validators.sanitizeInput(email));
       
       if (response.error) {
         setError(response.error);
       } else {
         setSuccess(true);
+        // Slight delay to let user see success message
         setTimeout(() => {
-          navigation.navigate('ResetCode', { email });
-        }, 2000);
+          if (navigation && navigation.navigate) {
+            navigation.navigate('ResetCode', { email: validators.sanitizeInput(email) });
+          }
+        }, 1500);
       }
     } catch (err) {
+      console.error('Password reset error:', err);
       setError('Failed to request password reset. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, navigation]);
 
-  const isFormValid = email.trim() && !emailError;
+  const isFormValid = email.trim() && !emailError && !loading;
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+      keyboardVerticalOffset={getKeyboardOffset()}
       style={styles.container}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        scrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
@@ -117,13 +149,17 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
         <Animated.View
           style={[
             styles.header,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+            { 
+              opacity: fadeAnim, 
+              transform: [{ translateY: slideAnim }, { translateX: shakeAnim }] 
+            },
           ]}
         >
           <Pressable
             style={styles.backButton}
             onPress={() => navigation.goBack()}
             disabled={loading}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <MaterialCommunityIcons
               name="arrow-left"
@@ -156,11 +192,16 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
             <Text style={[styles.fieldLabel, isEmailFocused && styles.fieldLabelFocused]}>
               Email Address
             </Text>
-            <View style={[styles.inputRow, isEmailFocused && styles.inputRowFocused, emailError && styles.inputRowError]}>
+            <View style={[
+              styles.inputRow, 
+              isEmailFocused && styles.inputRowFocused, 
+              emailError && styles.inputRowError
+            ]}>
               <MaterialCommunityIcons
                 name="email"
                 size={18}
                 color={isEmailFocused ? COLORS.accent : COLORS.textSecondary}
+                style={styles.inputIcon}
               />
               <Input
                 label=""
@@ -174,6 +215,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoComplete="email"
                 editable={!loading}
                 containerStyle={styles.inputInner}
               />
@@ -182,19 +224,26 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
                   name="check-circle"
                   size={18}
                   color={COLORS.success}
+                  style={styles.checkIcon}
                 />
               )}
             </View>
-            {emailError && <Text style={styles.fieldError}>{emailError}</Text>}
+            {emailError && (
+              <View style={styles.inlineError}>
+                <MaterialCommunityIcons name="alert-circle" size={12} color={COLORS.destructive} />
+                <Text style={styles.fieldError}>{emailError}</Text>
+              </View>
+            )}
           </View>
 
           {/* Error Message */}
           {error && (
-            <View style={styles.alertError}>
+            <View style={[styles.alertError, { transform: [{ translateX: shakeAnim }] }]}>
               <MaterialCommunityIcons
                 name="alert-circle"
                 size={18}
                 color={COLORS.destructive}
+                style={styles.alertIcon}
               />
               <Text style={styles.alertText}>{error}</Text>
             </View>
@@ -207,6 +256,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
                 name="check-circle"
                 size={18}
                 color={COLORS.success}
+                style={styles.alertIcon}
               />
               <Text style={styles.alertSuccessText}>Reset code sent! Redirecting...</Text>
             </View>
@@ -217,14 +267,18 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
             title={loading ? 'Sending...' : 'Send Reset Code'}
             onPress={handleRequestReset}
             loading={loading}
-            disabled={loading || !isFormValid}
-            style={[styles.cta, (!isFormValid || loading) && styles.ctaDisabled]}
+            disabled={!isFormValid}
+            style={[styles.cta, !isFormValid && styles.ctaDisabled]}
           />
 
           {/* Back to Login Link */}
           <View style={styles.backToLoginRow}>
             <Text style={styles.backToLoginPrompt}>Remember your password?</Text>
-            <Pressable onPress={() => navigation.navigate('Login')} disabled={loading}>
+            <Pressable 
+              onPress={() => navigation.navigate('Login')} 
+              disabled={loading}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Text style={[styles.backToLoginLink, loading && styles.disabledText]}>
                 {' '}Sign in
               </Text>
@@ -238,8 +292,9 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
             name="information"
             size={16}
             color={COLORS.accent}
+            style={styles.infoIcon}
           />
-          <Text style={styles.infoText}>We'll send a reset code to your email. Check spam folder if you don't see it.</Text>
+          <Text style={styles.infoText}>We'll send a reset code to your email. Check your spam folder if you don't see it.</Text>
         </Animated.View>
       </ScrollView>
 
@@ -248,6 +303,8 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
   );
 };
 
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -255,17 +312,17 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: PADDING.horizontal,
-    paddingTop: SPACING.lg,
-    paddingBottom: SPACING.xl,
+    paddingHorizontal: responsivePadding.horizontal,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
 
   // ── Header ────────────────────────────────────────────────────────────────
   header: {
-    marginBottom: SPACING.xl,
+    marginBottom: spacing.lg,
   },
   backButton: {
-    marginBottom: SPACING.lg,
+    marginBottom: spacing.md,
   },
   headerContent: {
     alignItems: 'center',
@@ -277,18 +334,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: spacing.md,
   },
   title: {
     ...TYPOGRAPHY.title,
-    fontSize: 24,
+    fontSize: responsiveFontSize(24),
     fontWeight: '700',
     color: COLORS.text ?? COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+    marginBottom: spacing.sm,
   },
   subtitle: {
     ...TYPOGRAPHY.body,
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     color: COLORS.textSecondary,
   },
 
@@ -296,7 +353,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.surface ?? COLORS.primaryBackground,
     borderRadius: 20,
-    padding: SPACING.xl,
+    padding: spacing.lg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -304,21 +361,21 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: COLORS.border ?? COLORS.textMuted + '30',
-    marginBottom: SPACING.lg,
+    marginBottom: spacing.lg,
   },
 
   // ── Field ────────────────────────────────────────────────────────────────
   fieldGroup: {
-    marginBottom: SPACING.lg,
+    marginBottom: spacing.md,
   },
   fieldLabel: {
     ...TYPOGRAPHY.caption,
-    fontSize: 12,
+    fontSize: responsiveFontSize(12),
     fontWeight: '600',
     color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
+    marginBottom: spacing.xs,
     textTransform: 'uppercase',
-    letterSpacing:0.6,
+    letterSpacing: 0.6,
   },
   fieldLabelFocused: {
     color: COLORS.accent,
@@ -329,10 +386,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.border ?? COLORS.textMuted + '40',
     borderRadius: 12,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: spacing.md,
     backgroundColor: COLORS.inputBackground ?? COLORS.primaryBackground,
     minHeight: 52,
-    gap: SPACING.sm,
+    gap: spacing.sm,
+  },
+  inputIcon: {
+    marginRight: spacing.xs,
+  },
+  checkIcon: {
+    marginLeft: spacing.xs,
   },
   inputRowFocused: {
     borderColor: COLORS.accent,
@@ -344,18 +407,27 @@ const styles = StyleSheet.create({
   },
   inputRowError: {
     borderColor: COLORS.destructive,
+    backgroundColor: COLORS.destructive + '05',
   },
   inputInner: {
     flex: 1,
     marginBottom: 0,
     borderWidth: 0,
+    paddingHorizontal: 0,
+  },
+  inlineError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+    marginLeft: 2,
   },
   fieldError: {
     ...TYPOGRAPHY.caption,
     color: COLORS.destructive,
-    fontSize: 12,
-    marginTop: SPACING.xs,
-    marginLeft: 2,
+    fontSize: responsiveFontSize(12),
+    fontWeight: '500',
+    flex: 1,
   },
 
   // ── Alerts ────────────────────────────────────────────────────────────────
@@ -364,41 +436,44 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     backgroundColor: COLORS.destructive + '12',
     borderRadius: 10,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: COLORS.destructive + '30',
-    gap: SPACING.sm,
+    gap: spacing.sm,
   },
   alertSuccess: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: COLORS.success + '12',
     borderRadius: 10,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: COLORS.success + '30',
-    gap: SPACING.sm,
+    gap: spacing.sm,
+  },
+  alertIcon: {
+    marginTop: 2,
   },
   alertText: {
     ...TYPOGRAPHY.caption,
     color: COLORS.destructive,
     flex: 1,
-    fontSize: 13,
+    fontSize: responsiveFontSize(13),
     fontWeight: '500',
   },
   alertSuccessText: {
     ...TYPOGRAPHY.caption,
     color: COLORS.success,
     flex: 1,
-    fontSize: 13,
+    fontSize: responsiveFontSize(13),
     fontWeight: '500',
   },
 
   // ── CTA ───────────────────────────────────────────────────────────────────
   cta: {
-    marginTop: SPACING.xs,
+    marginTop: spacing.md,
     borderRadius: 12,
     height: 52,
   },
@@ -411,16 +486,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: SPACING.lg,
+    marginTop: spacing.lg,
   },
   backToLoginPrompt: {
     ...TYPOGRAPHY.body,
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     color: COLORS.textSecondary,
   },
   backToLoginLink: {
     ...TYPOGRAPHY.body,
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     color: COLORS.accent,
     fontWeight: '700',
   },
@@ -434,17 +509,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     backgroundColor: COLORS.accent + '10',
     borderRadius: 10,
-    padding: SPACING.md,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: COLORS.accent + '30',
-    gap: SPACING.sm,
+    gap: spacing.sm,
+  },
+  infoIcon: {
+    marginTop: 2,
   },
   infoText: {
     ...TYPOGRAPHY.caption,
-    fontSize: 12,
+    fontSize: responsiveFontSize(12),
     color: COLORS.accent,
     flex: 1,
     fontWeight: '500',
+    lineHeight: 17,
   },
 });
 

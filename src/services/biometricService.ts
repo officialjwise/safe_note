@@ -1,8 +1,9 @@
 import * as LocalAuthentication from 'expo-local-authentication';
+import { Platform } from 'react-native';
 
 export interface BiometricAvailability {
   available: boolean;
-  biometricsType?: 'Fingerprint' | 'FaceID' | 'Iris';
+  biometricsType?: 'Fingerprint' | 'FaceID' | 'Iris' | 'Unknown';
 }
 
 export const biometricService = {
@@ -16,13 +17,21 @@ export const biometricService = {
       }
 
       const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-      const biometricsType = supportedTypes.includes(
-        LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION
-      )
-        ? 'FaceID'
-        : supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)
-        ? 'Fingerprint'
-        : 'Iris';
+      
+      let biometricsType: 'Fingerprint' | 'FaceID' | 'Iris' | 'Unknown' = 'Unknown';
+      
+      // Check for Face ID (iOS 11+ and all modern Android)
+      if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+        biometricsType = 'FaceID';
+      }
+      // Check for Fingerprint
+      else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+        biometricsType = 'Fingerprint';
+      }
+      // Check for Iris (less common but still supported)
+      else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
+        biometricsType = 'Iris';
+      }
 
       return {
         available: true,
@@ -36,10 +45,22 @@ export const biometricService = {
 
   async authenticate(reason: string = 'Unlock SecureNotes'): Promise<boolean> {
     try {
+      const biometricAvailable = await this.isBiometricAvailable();
+      const fallbackLabel = !biometricAvailable.available 
+        ? 'Use Password' 
+        : biometricAvailable.biometricsType === 'FaceID' 
+        ? 'Use Face ID' 
+        : biometricAvailable.biometricsType === 'Fingerprint'
+        ? 'Use Fingerprint'
+        : 'Use Biometric';
+
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason,
-        fallbackLabel: 'Use Password',
+        fallbackLabel,
         disableDeviceFallback: false,
+        // For iOS: Allow FaceID with passcode fallback
+        // For Android: Allow both biometric and device unlock
+        requireConfirmation: Platform.OS === 'ios' ? true : false,
       });
 
       return result.success;
@@ -51,5 +72,24 @@ export const biometricService = {
 
   async createSignature(reason: string = 'Authenticate'): Promise<string | null> {
     return null;
+  },
+
+  // Helper method to get user-friendly biometric name
+  async getBiometricDisplayName(): Promise<string> {
+    const availability = await this.isBiometricAvailable();
+    if (!availability.available) {
+      return 'Biometric Authentication';
+    }
+    
+    switch (availability.biometricsType) {
+      case 'FaceID':
+        return 'Face ID';
+      case 'Fingerprint':
+        return 'Fingerprint';
+      case 'Iris':
+        return 'Iris Recognition';
+      default:
+        return 'Biometric';
+    }
   },
 };
