@@ -124,8 +124,32 @@ const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({ navigation, route }
 
     setBody(updatedBody);
     setIsDirty(true);
+
+    // Keep cursor inside markers when no text is selected.
+    if (selectedText.length === 0) {
+      const cursorInside = start + prefix.length;
+      setSelection({ start: cursorInside, end: cursorInside });
+      return;
+    }
+
     const cursorPosition = start + prefix.length + selectedText.length + suffix.length;
     setSelection({ start: cursorPosition, end: cursorPosition });
+  };
+
+  const insertLinkTemplate = () => {
+    const start = selection.start;
+    const end = selection.end;
+    const selectedText = body.slice(start, end);
+    const label = selectedText.length > 0 ? selectedText : 'link text';
+    const linkTemplate = `[${label}](https://example.com)`;
+    const updatedBody = `${body.slice(0, start)}${linkTemplate}${body.slice(end)}`;
+
+    setBody(updatedBody);
+    setIsDirty(true);
+
+    const urlStart = start + linkTemplate.indexOf('https://');
+    const urlEnd = urlStart + 'https://example.com'.length;
+    setSelection({ start: urlStart, end: urlEnd });
   };
 
   const insertBullet = () => {
@@ -302,7 +326,7 @@ const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({ navigation, route }
           <Pressable style={styles.toolbarButton} onPress={insertBullet}>
             <MaterialCommunityIcons name="format-list-bulleted" size={20} color={COLORS.textPrimary} />
           </Pressable>
-          <Pressable style={styles.toolbarButton} onPress={() => applyFormat('[', '](https://)')}>
+          <Pressable style={styles.toolbarButton} onPress={insertLinkTemplate}>
             <MaterialCommunityIcons name="link-variant" size={20} color={COLORS.textPrimary} />
           </Pressable>
         </View>

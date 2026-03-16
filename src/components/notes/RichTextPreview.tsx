@@ -15,7 +15,7 @@ type InlineToken = {
   linkUrl?: string;
 };
 
-const TOKEN_REGEX = /(\*\*[^\*]+\*\*|__[^_]+__|~~[^~]+~~|\*[^\*]+\*|\[[^\]]+\]\((https?:\/\/[^)]+)\))/g;
+const TOKEN_REGEX = /(\*\*[^*]+\*\*|__[^_]+__|~~[^~]+~~|\*[^*]+\*|\[[^\]]+\]\(([^)]+)\))/g;
 
 const parseInlineTokens = (line: string): InlineToken[] => {
   const tokens: InlineToken[] = [];
@@ -58,12 +58,16 @@ const parseInlineTokens = (line: string): InlineToken[] => {
         style: styles.strike,
       });
     } else if (full.startsWith('[')) {
-      const linkMatch = full.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/);
+      const linkMatch = full.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (linkMatch) {
+        const parsedUrl = linkMatch[2].startsWith('http://') || linkMatch[2].startsWith('https://')
+          ? linkMatch[2]
+          : `https://${linkMatch[2]}`;
+
         tokens.push({
           key: `link-${matchIndex}`,
           text: linkMatch[1],
-          linkUrl: linkMatch[2],
+          linkUrl: parsedUrl,
           style: styles.link,
         });
       } else {

@@ -18,14 +18,9 @@ import { validators } from '@utils/validators';
 import { COLORS, SPACING, TYPOGRAPHY, PADDING } from '@constants';
 import { apiClient } from '@services/apiClient';
 import type { StackScreenProps } from '@react-navigation/stack';
+import type { AuthStackParamList } from '@navigation/AuthNavigator';
 
-type RootStackParamList = {
-  ForgotPassword: undefined;
-  Login: undefined;
-  ResetCode: { email: string };
-};
-
-type ForgotPasswordScreenProps = StackScreenProps<RootStackParamList, 'ForgotPassword'>;
+type ForgotPasswordScreenProps = StackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }: ForgotPasswordScreenProps) => {
   const [email, setEmail] = useState('');

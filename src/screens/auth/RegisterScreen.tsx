@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { Feather as Icon } from '@expo/vector-icons';
 import { useAuth } from '@hooks/useAuth';
 import { Button, Input } from '@components/ui';
 import { LoadingSpinner } from '@components/shared';
@@ -29,9 +30,12 @@ type RegisterScreenProps = StackScreenProps<RootStackParamList, 'Register'>;
 
 const Requirement: React.FC<{ text: string; met: boolean }> = ({ text, met }) => (
   <View style={styles.requirementItem}>
-    <Text style={[styles.requirementDot, { color: met ? COLORS.success : COLORS.textMuted }]}>
-      {met ? '✓' : '○'}
-    </Text>
+    <Icon
+      name={met ? 'check' : 'circle'}
+      size={13}
+      color={met ? COLORS.success : COLORS.textMuted}
+      style={styles.requirementIcon}
+    />
     <Text style={[styles.requirementText, { color: met ? COLORS.success : COLORS.textMuted }]}>
       {text}
     </Text>
@@ -61,32 +65,28 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
-  // Stable animated refs
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const strengthAnimation = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(32)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
 
-  // Mount animation
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 520,
+        duration: 480,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 520,
+        duration: 480,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
 
-    return () => {
-      clearErrorMessage();
-    };
+    return () => { clearErrorMessage(); };
   }, [clearErrorMessage]);
 
   useEffect(() => {
@@ -97,15 +97,16 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
     if (password) {
       const strength = validators.getPasswordStrength(password);
       setPasswordStrength(strength);
-      const targetValue = strength === 'strong' ? 1 : strength === 'medium' ? 0.5 : 0.2;
+      const target = strength === 'strong' ? 1 : strength === 'medium' ? 0.5 : 0.2;
       Animated.timing(strengthAnimation, {
-        toValue: targetValue,
+        toValue: target,
         duration: 300,
         easing: Easing.out(Easing.quad),
         useNativeDriver: false,
       }).start();
     } else {
       strengthAnimation.setValue(0);
+      setPasswordStrength('weak');
     }
   }, [password]);
 
@@ -150,7 +151,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
   const handlePasswordChange = (text: string) => {
     setPassword(text);
     if (passwordError) validatePassword(text);
-    // Re-validate confirm if already filled
     if (confirmPassword && confirmPasswordError) validateConfirmPassword(confirmPassword);
   };
 
@@ -208,18 +208,13 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
   // ── Strength helpers ────────────────────────────────────────────────────────
 
   const strengthColor =
-    passwordStrength === 'strong'
-      ? COLORS.success
-      : passwordStrength === 'medium'
-      ? '#F59E0B'
-      : COLORS.destructive;
+    passwordStrength === 'strong' ? COLORS.success :
+    passwordStrength === 'medium' ? '#F59E0B' :
+    COLORS.destructive;
 
   const strengthLabel =
-    passwordStrength === 'strong'
-      ? 'Strong'
-      : passwordStrength === 'medium'
-      ? 'Medium'
-      : 'Weak';
+    passwordStrength === 'strong' ? 'Strong' :
+    passwordStrength === 'medium' ? 'Medium' : 'Weak';
 
   const strengthBarWidth = strengthAnimation.interpolate({
     inputRange: [0, 1],
@@ -250,12 +245,19 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <Animated.View
-          style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+          style={[
+            styles.header,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
         >
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={12}>
-            <Text style={styles.backIcon}>←</Text>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Icon name="arrow-left" size={20} color={COLORS.text ?? COLORS.textSecondary} />
           </Pressable>
           <View style={styles.headerText}>
             <Text style={styles.title}>Create Account</Text>
@@ -263,7 +265,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
           </View>
         </Animated.View>
 
-        {/* Form Card */}
+        {/* ── Form Card ── */}
         <Animated.View
           style={[
             styles.card,
@@ -273,33 +275,44 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
           {/* Email */}
           <View style={styles.fieldGroup}>
             <Text style={[styles.fieldLabel, isEmailFocused && styles.fieldLabelFocused]}>
-              Email address
+              Email Address
             </Text>
-            <View
-              style={[
-                styles.inputRow,
-                isEmailFocused && styles.inputRowFocused,
-                !!emailError && styles.inputRowError,
-              ]}
-            >
-              <Text style={styles.fieldIcon}>✉️</Text>
+            <View style={[
+              styles.inputRow,
+              isEmailFocused && styles.inputRowFocused,
+              !!emailError && styles.inputRowError,
+            ]}>
+              <Icon
+                name="mail"
+                size={16}
+                color={isEmailFocused ? COLORS.accent : COLORS.textMuted}
+                style={styles.inputLeadIcon}
+              />
               <Input
                 label=""
                 placeholder="you@example.com"
                 value={email}
                 onChangeText={handleEmailChange}
                 onFocus={() => setIsEmailFocused(true)}
-                onBlur={() => { setIsEmailFocused(false); if (email.trim()) validateEmail(email); }}
+                onBlur={() => {
+                  setIsEmailFocused(false);
+                  if (email.trim()) validateEmail(email);
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!loading}
                 containerStyle={styles.inputInner}
               />
               {!emailError && email.trim() ? (
-                <Text style={styles.checkIcon}>✓</Text>
+                <Icon name="check" size={16} color={COLORS.success} style={styles.inputTrailIcon} />
               ) : null}
             </View>
-            {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+            {emailError ? (
+              <View style={styles.inlineError}>
+                <Icon name="alert-circle" size={12} color={COLORS.destructive} />
+                <Text style={styles.fieldError}>{emailError}</Text>
+              </View>
+            ) : null}
           </View>
 
           {/* Password */}
@@ -307,21 +320,27 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
             <Text style={[styles.fieldLabel, isPasswordFocused && styles.fieldLabelFocused]}>
               Password
             </Text>
-            <View
-              style={[
-                styles.inputRow,
-                isPasswordFocused && styles.inputRowFocused,
-                !!passwordError && styles.inputRowError,
-              ]}
-            >
-              <Text style={styles.fieldIcon}>🔑</Text>
+            <View style={[
+              styles.inputRow,
+              isPasswordFocused && styles.inputRowFocused,
+              !!passwordError && styles.inputRowError,
+            ]}>
+              <Icon
+                name="lock"
+                size={16}
+                color={isPasswordFocused ? COLORS.accent : COLORS.textMuted}
+                style={styles.inputLeadIcon}
+              />
               <Input
                 label=""
                 placeholder="Create a strong password"
                 value={password}
                 onChangeText={handlePasswordChange}
                 onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => { setIsPasswordFocused(false); if (password) validatePassword(password); }}
+                onBlur={() => {
+                  setIsPasswordFocused(false);
+                  if (password) validatePassword(password);
+                }}
                 secureText={!showPassword}
                 showSecureToggle={false}
                 autoCapitalize="none"
@@ -331,26 +350,38 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
                 editable={!loading}
                 containerStyle={styles.inputInner}
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-                <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Icon name={showPassword ? 'eye-off' : 'eye'} size={16} color={COLORS.textMuted} />
               </Pressable>
             </View>
-            {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
+            {passwordError ? (
+              <View style={styles.inlineError}>
+                <Icon name="alert-circle" size={12} color={COLORS.destructive} />
+                <Text style={styles.fieldError}>{passwordError}</Text>
+              </View>
+            ) : null}
 
             {/* Strength meter */}
             {password ? (
               <View style={styles.strengthBlock}>
                 <View style={styles.strengthHeader}>
                   <Text style={styles.strengthLabel}>Password strength</Text>
-                  <Text style={[styles.strengthValue, { color: strengthColor }]}>{strengthLabel}</Text>
+                  <Text style={[styles.strengthValue, { color: strengthColor }]}>
+                    {strengthLabel}
+                  </Text>
                 </View>
                 <View style={styles.strengthTrack}>
                   <Animated.View
-                    style={[styles.strengthFill, { width: strengthBarWidth, backgroundColor: strengthColor }]}
+                    style={[
+                      styles.strengthFill,
+                      { width: strengthBarWidth, backgroundColor: strengthColor },
+                    ]}
                   />
                 </View>
-
-                {/* Requirements checklist */}
                 <View style={styles.requirementsBox}>
                   <Requirement text="At least 8 characters" met={password.length >= 8} />
                   <Requirement text="Contains uppercase letter" met={/[A-Z]/.test(password)} />
@@ -367,16 +398,19 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
           {/* Confirm Password */}
           <View style={styles.fieldGroup}>
             <Text style={[styles.fieldLabel, isConfirmFocused && styles.fieldLabelFocused]}>
-              Confirm password
+              Confirm Password
             </Text>
-            <View
-              style={[
-                styles.inputRow,
-                isConfirmFocused && styles.inputRowFocused,
-                !!confirmPasswordError && styles.inputRowError,
-              ]}
-            >
-              <Text style={styles.fieldIcon}>🔒</Text>
+            <View style={[
+              styles.inputRow,
+              isConfirmFocused && styles.inputRowFocused,
+              !!confirmPasswordError && styles.inputRowError,
+            ]}>
+              <Icon
+                name="shield"
+                size={16}
+                color={isConfirmFocused ? COLORS.accent : COLORS.textMuted}
+                style={styles.inputLeadIcon}
+              />
               <Input
                 label=""
                 placeholder="Re-enter your password"
@@ -399,30 +433,34 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
               <Pressable
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={styles.eyeButton}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Text style={styles.eyeIcon}>{showConfirmPassword ? '🙈' : '👁️'}</Text>
+                <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={16} color={COLORS.textMuted} />
               </Pressable>
               {!confirmPasswordError && confirmPassword ? (
-                <Text style={styles.checkIcon}>✓</Text>
+                <Icon name="check" size={16} color={COLORS.success} style={styles.inputTrailIcon} />
               ) : null}
             </View>
             {confirmPasswordError ? (
-              <Text style={styles.fieldError}>{confirmPasswordError}</Text>
+              <View style={styles.inlineError}>
+                <Icon name="alert-circle" size={12} color={COLORS.destructive} />
+                <Text style={styles.fieldError}>{confirmPasswordError}</Text>
+              </View>
             ) : null}
           </View>
 
           {/* Auth-level error */}
           {error ? (
             <View style={styles.alertError}>
-              <Text style={styles.alertIcon}>⚠️</Text>
-              <Text style={styles.alertText}>{error}</Text>
+              <Icon name="alert-triangle" size={15} color={COLORS.destructive} style={styles.alertLeadIcon} />
+              <Text style={styles.alertErrorText}>{error}</Text>
             </View>
           ) : null}
 
           {/* Success */}
           {registerSuccess ? (
             <View style={styles.alertSuccess}>
-              <Text style={styles.alertIcon}>✅</Text>
+              <Icon name="check-circle" size={15} color={COLORS.success} style={styles.alertLeadIcon} />
               <Text style={styles.alertSuccessText}>Account created! Redirecting…</Text>
             </View>
           ) : null}
@@ -438,11 +476,15 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
 
           {/* Privacy notice */}
           <Text style={styles.privacyNotice}>
-            By creating an account, you agree to our Terms of Service and Privacy Policy. Your data is always encrypted.
+            By creating an account, you agree to our{' '}
+            <Text style={styles.privacyLink}>Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={styles.privacyLink}>Privacy Policy</Text>.
+            {' '}Your data is always encrypted.
           </Text>
         </Animated.View>
 
-        {/* Footer */}
+        {/* ── Footer ── */}
         <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
           <Text style={styles.footerPrompt}>Already have an account?</Text>
           <Pressable onPress={() => navigation.goBack()} disabled={loading}>
@@ -452,7 +494,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: RegisterS
 
         {/* Trust badge */}
         <Animated.View style={[styles.trustBadge, { opacity: fadeAnim }]}>
-          <Text style={styles.trustText}>🛡️ 256-bit AES · Zero-knowledge · End-to-end encrypted</Text>
+          <Icon name="shield" size={11} color={COLORS.textMuted} style={styles.trustIcon} />
+          <Text style={styles.trustText}>256-bit AES · Zero-knowledge · End-to-end encrypted</Text>
         </Animated.View>
       </ScrollView>
 
@@ -480,14 +523,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.xl,
+    paddingTop: SPACING.sm,
   },
   backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: COLORS.surface ?? COLORS.textMuted + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: SPACING.md,
-    padding: SPACING.xs,
-  },
-  backIcon: {
-    fontSize: 22,
-    color: COLORS.text ?? COLORS.textSecondary,
   },
   headerText: {
     flex: 1,
@@ -502,7 +547,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
+    marginTop: 3,
     fontSize: 13,
   },
 
@@ -512,13 +557,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: SPACING.xl,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: COLORS.border ?? COLORS.textMuted + '30',
-    marginBottom: SPACING.lg,
+    borderColor: COLORS.border ?? COLORS.textMuted + '25',
+    marginBottom: SPACING.xl,
   },
 
   // ── Field ────────────────────────────────────────────────────────────────────
@@ -527,12 +572,12 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     ...TYPOGRAPHY.caption,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
+    marginBottom: 6,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.7,
   },
   fieldLabelFocused: {
     color: COLORS.accent,
@@ -541,51 +586,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.border ?? COLORS.textMuted + '40',
+    borderColor: COLORS.border ?? COLORS.textMuted + '35',
     borderRadius: 12,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: 12,
     backgroundColor: COLORS.inputBackground ?? COLORS.primaryBackground,
-    minHeight: 52,
+    height: 52,
   },
   inputRowFocused: {
     borderColor: COLORS.accent,
     shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
     elevation: 2,
   },
   inputRowError: {
     borderColor: COLORS.destructive,
+    backgroundColor: COLORS.destructive + '05',
   },
-  fieldIcon: {
-    fontSize: 16,
-    marginRight: SPACING.sm,
+  inputLeadIcon: {
+    marginRight: 10,
   },
   inputInner: {
     flex: 1,
     marginBottom: 0,
     borderWidth: 0,
+    paddingHorizontal: 0,
   },
-  checkIcon: {
-    fontSize: 16,
-    color: COLORS.success,
-    fontWeight: '700',
-    marginLeft: SPACING.xs,
+  inputTrailIcon: {
+    marginLeft: 8,
   },
   eyeButton: {
-    padding: SPACING.xs,
-    marginLeft: SPACING.xs,
+    padding: 4,
+    marginLeft: 6,
   },
-  eyeIcon: {
-    fontSize: 16,
+  inlineError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 5,
+    marginLeft: 2,
   },
   fieldError: {
     ...TYPOGRAPHY.caption,
     color: COLORS.destructive,
     fontSize: 12,
-    marginTop: SPACING.xs,
-    marginLeft: 2,
   },
 
   // ── Strength ─────────────────────────────────────────────────────────────────
@@ -596,29 +641,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.xs,
+    marginBottom: 6,
   },
   strengthLabel: {
     ...TYPOGRAPHY.caption,
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
     fontWeight: '500',
   },
   strengthValue: {
     ...TYPOGRAPHY.caption,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   strengthTrack: {
-    height: 5,
-    backgroundColor: COLORS.textMuted + '25',
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: COLORS.textMuted + '20',
+    borderRadius: 2,
     overflow: 'hidden',
     marginBottom: SPACING.md,
   },
   strengthFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
 
   // ── Requirements ──────────────────────────────────────────────────────────────
@@ -627,18 +672,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
+    gap: 4,
   },
   requirementItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 3,
   },
-  requirementDot: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginRight: SPACING.sm,
-    width: 16,
-    textAlign: 'center',
+  requirementIcon: {
+    marginRight: 8,
+    width: 14,
   },
   requirementText: {
     ...TYPOGRAPHY.caption,
@@ -650,29 +692,29 @@ const styles = StyleSheet.create({
   alertError: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: COLORS.destructive + '12',
+    backgroundColor: COLORS.destructive + '10',
     borderRadius: 10,
     padding: SPACING.md,
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.destructive + '30',
+    borderColor: COLORS.destructive + '25',
+    gap: 10,
   },
   alertSuccess: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: COLORS.success + '12',
+    backgroundColor: COLORS.success + '10',
     borderRadius: 10,
     padding: SPACING.md,
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.success + '30',
+    borderColor: COLORS.success + '25',
+    gap: 10,
   },
-  alertIcon: {
-    fontSize: 16,
-    marginRight: SPACING.sm,
+  alertLeadIcon: {
     marginTop: 1,
   },
-  alertText: {
+  alertErrorText: {
     ...TYPOGRAPHY.caption,
     color: COLORS.destructive,
     flex: 1,
@@ -691,6 +733,7 @@ const styles = StyleSheet.create({
   cta: {
     borderRadius: 12,
     height: 52,
+    marginTop: SPACING.xs,
   },
   ctaDisabled: {
     opacity: 0.45,
@@ -704,6 +747,10 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     fontSize: 11,
     lineHeight: 17,
+  },
+  privacyLink: {
+    color: COLORS.accent,
+    fontWeight: '600',
   },
 
   // ── Footer ────────────────────────────────────────────────────────────────────
@@ -730,14 +777,18 @@ const styles = StyleSheet.create({
 
   // ── Trust badge ───────────────────────────────────────────────────────────────
   trustBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingBottom: SPACING.md,
+  },
+  trustIcon: {
+    marginRight: 5,
   },
   trustText: {
     ...TYPOGRAPHY.caption,
     fontSize: 11,
     color: COLORS.textMuted,
-    textAlign: 'center',
     letterSpacing: 0.2,
   },
 });
