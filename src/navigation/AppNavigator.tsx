@@ -38,6 +38,8 @@ const RootNavigator: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && shouldShowBiometricPrompt && isAvailable) {
       setShowBiometricPrompt(true);
+    } else {
+      setShowBiometricPrompt(false);
     }
   }, [isAuthenticated, shouldShowBiometricPrompt, isAvailable]);
 
@@ -50,11 +52,7 @@ const RootNavigator: React.FC = () => {
     setIsBiometricAuthenticating(true);
     try {
       const success = await authenticate();
-      if (success) {
-        setShowBiometricPrompt(false);
-      }
-      // If not successful, the BiometricPrompt component handles
-      // the failure count and surfaces the fallback option.
+      setShowBiometricPrompt(false);
     } finally {
       setIsBiometricAuthenticating(false);
     }
@@ -89,13 +87,14 @@ const RootNavigator: React.FC = () => {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-
-      <BiometricPrompt
-        visible={showBiometricPrompt}
-        onAuthenticate={handleBiometricAuth}
-        onUsePinInstead={handleBiometricFallback}
-        loading={isBiometricAuthenticating}
-      />
+      {showBiometricPrompt && (
+        <BiometricPrompt
+          visible={showBiometricPrompt}
+          onAuthenticate={handleBiometricAuth}
+          onUsePinInstead={handleBiometricFallback}
+          loading={isBiometricAuthenticating}
+        />
+      )}
     </View>
   );
 };
