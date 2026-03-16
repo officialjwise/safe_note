@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -35,17 +35,14 @@ const NoteDetailScreen: React.FC<NoteDetailScreenProps> = ({ navigation, route }
   const note = notes.find((n: Note) => n.id === noteId);
 
   useFocusEffect(
-    React.useCallback(() => {
-      // Screenshot protection should be implemented via native modules
-      // or a proper screenshot-blocking library for iOS/Android
-
+    useCallback(() => {
       return () => {
         // Cleanup
       };
     }, [])
   );
 
-  const handleDeleteNote = async () => {
+  const handleDeleteNote = useCallback(async () => {
     if (!note) return;
 
     setDeleting(true);
@@ -60,7 +57,12 @@ const NoteDetailScreen: React.FC<NoteDetailScreenProps> = ({ navigation, route }
     } finally {
       setDeleting(false);
     }
-  };
+  }, [note, deleteNote, navigation]);
+
+  const handleEditNote = useCallback(() => {
+    if (!note) return;
+    navigation.push('NoteEditor', { noteId: note.id });
+  }, [note, navigation]);
 
   if (!note) {
     return (
@@ -83,9 +85,7 @@ const NoteDetailScreen: React.FC<NoteDetailScreenProps> = ({ navigation, route }
         title="Note"
         onBackPress={() => navigation.goBack()}
         rightIcon="pencil-outline"
-        onRightIconPress={() =>
-          navigation.push('NoteEditor', { noteId: note.id })
-        }
+        onRightIconPress={handleEditNote}
       />
 
       <ScrollView

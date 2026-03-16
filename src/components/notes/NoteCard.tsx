@@ -43,6 +43,9 @@ const NoteCard: React.FC<NoteCardProps> = ({
       ref={swipeableRef}
       renderRightActions={renderRightActions}
       rightThreshold={40}
+      activeOffsetX={{ right: 20 }}
+      activeOffsetY={[-5, 5]}
+      friction={2}
     >
       <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
         <Card style={styles.card}>

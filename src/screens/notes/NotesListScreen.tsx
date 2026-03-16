@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   FlatList,
@@ -39,35 +39,31 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }: NotesLi
     return unsubscribe;
   }, [navigation, fetchNotes]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await fetchNotes();
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [fetchNotes]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     searchNotes(query);
-  };
+  }, [searchNotes]);
 
-  const handleNotePress = (noteId: string) => {
+  const handleNotePress = useCallback((noteId: string) => {
     navigation.navigate('NoteDetail', { noteId });
-  };
+  }, [navigation]);
 
-  const handleNoteDelete = (noteId: string) => {
-    // Delete will be handled in detail screen
-  };
-
-  const handleCreateNote = () => {
+  const handleCreateNote = useCallback(() => {
     navigation.navigate('NoteEditor', {});
-  };
+  }, [navigation]);
 
-  const handleNavigateToSettings = () => {
+  const handleNavigateToSettings = useCallback(() => {
     navigation.getParent()?.navigate('SettingsTab');
-  };
+  }, [navigation]);
 
   const renderEmptyState = () => {
     if (searchQuery.length > 0) {
@@ -129,7 +125,7 @@ const NotesListScreen: React.FC<NotesListScreenProps> = ({ navigation }: NotesLi
                 body={item.body}
                 updatedAt={item.updatedAt}
                 onPress={() => handleNotePress(item.id)}
-                onDelete={() => handleNoteDelete(item.id)}
+                onDelete={() => {}}
               />
             </View>
           )}
