@@ -1,0 +1,828 @@
+{
+  "info": {
+    "name": "SecureNotes - Complete API Testing Collection",
+    "description": "Comprehensive API testing suite with OWASP Top 10 security vulnerability scenarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. AUTHENTICATION & SESSION MANAGEMENT",
+      "item": [
+        {
+          "name": "1.1 Register New User (Valid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/register",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Register - OWASP #1: Broken Auth - Weak Password",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"weak@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/register",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Register - OWASP #7: XSS Attempt - HTML in Email",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"<script>alert('xss')</script>@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/register",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Login (Valid)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.5 Login - OWASP #1: Brute Force - Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"WrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.6 Login - OWASP #1: SQL Injection Attempt",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin' OR '1'='1\",\n  \"password\": \"' OR '1'='1\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.7 Refresh Token (Valid)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{ refresh_token }}\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/refresh",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "1.8 Refresh Token - OWASP #1: Invalid Token",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"invalid_token_here\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/refresh",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. NOTES CRUD OPERATIONS",
+      "item": [
+        {
+          "name": "2.1 Create Note (Valid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Secret Note\",\n  \"body\": \"This is an encrypted note\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Create Note - OWASP #2: SQL Injection in Title",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"'; DROP TABLE notes; --\",\n  \"body\": \"SQL Injection Test\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Create Note - OWASP #7: XSS Payload in Body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"XSS Test\",\n  \"body\": \"<img src=x onerror='alert(\\\"XSS attack!\\\")'/>\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "2.4 Get All Notes (Valid)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "2.5 Get Note by ID (Valid)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes/{{ note_id }}",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes", "{{ note_id }}"]
+            }
+          }
+        },
+        {
+          "name": "2.6 Get Note - OWASP #1: IDOR (Access Other User's Note)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes/other_users_note_id",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes", "other_users_note_id"]
+            }
+          }
+        },
+        {
+          "name": "2.7 Get Note - OWASP #1: Invalid UUID Format",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes/not-a-valid-uuid",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes", "not-a-valid-uuid"]
+            }
+          }
+        },
+        {
+          "name": "2.8 Update Note (Valid)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"body\": \"Updated content\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes/{{ note_id }}",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes", "{{ note_id }}"]
+            }
+          }
+        },
+        {
+          "name": "2.9 Delete Note (Valid)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes/{{ note_id }}",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes", "{{ note_id }}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. BROKEN ACCESS CONTROL (OWASP #1)",
+      "item": [
+        {
+          "name": "3.1 Unauthorized Access - No Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Unauthorized Access - Expired Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Unauthorized Access - Malformed Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer invalid.token.here"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "3.4 IDOR - Access Another User's Notes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/users/different-user-id/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "users", "different-user-id", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. INJECTION (OWASP #3)",
+      "item": [
+        {
+          "name": "4.1 SQL Injection - Login Email Field",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin' OR '1'='1' -- \",\n  \"password\": \"anything\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "4.2 SQL Injection - Union-Based",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com' UNION SELECT * FROM users -- \",\n  \"password\": \"test\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Command Injection - Note Title",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"; rm -rf /\",\n  \"body\": \"Command injection test\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. RATE LIMITING & BRUTE FORCE (OWASP #1)",
+      "item": [
+        {
+          "name": "5.1 Rapid Login Attempts (Brute Force)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"WrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Rapid API Requests (DoS)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. SENSITIVE DATA EXPOSURE (OWASP #2)",
+      "item": [
+        {
+          "name": "6.1 Check for Plaintext Password in Response",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "6.2 Check for Sensitive Data in Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/health",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "health"]
+            }
+          }
+        },
+        {
+          "name": "6.3 Verify HTTPS Only (HTTP should fail)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. CRYPTOGRAPHIC FAILURES (OWASP #2)",
+      "item": [
+        {
+          "name": "7.1 Verify Password Hashing (Not Plain Text)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "7.2 Verify Note Encryption (Check DB directly)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Encrypted Content\",\n  \"body\": \"This should be encrypted in database\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. BIOMETRIC AUTHENTICATION",
+      "item": [
+        {
+          "name": "8.1 Check Biometric Availability (Face ID/Fingerprint)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/biometric/status",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "biometric", "status"]
+            }
+          }
+        },
+        {
+          "name": "8.2 Enroll Biometric",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"biometric_type\": \"face_id\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/biometric/enroll",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "biometric", "enroll"]
+            }
+          }
+        },
+        {
+          "name": "8.3 Get Biometric Enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/biometric/enrollments",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "biometric", "enrollments"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. PASSWORD RESET & ACCOUNT RECOVERY",
+      "item": [
+        {
+          "name": "9.1 Request Password Reset (Valid)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/forgot-password",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "9.2 Password Reset - OWASP #1: Valid Code",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"code\": \"123456\",\n  \"new_password\": \"NewSecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/reset-password",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "9.3 Password Reset - OWASP #1: Brute Force Code (Wrong Code)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"code\": \"000000\",\n  \"new_password\": \"NewSecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/auth/reset-password",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. SECURITY HEADERS & CORS",
+      "item": [
+        {
+          "name": "10.1 Check Security Headers",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "10.2 Check CORS - Valid Origin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Origin", "value": "http://192.168.1.191:8081"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        },
+        {
+          "name": "10.3 Check CORS - Invalid Origin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Origin", "value": "http://malicious.com"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. ERROR HANDLING & INFO DISCLOSURE (OWASP #4)",
+      "item": [
+        {
+          "name": "11.1 Invalid Endpoint (500 Error Disclosure)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/invalid-endpoint",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "invalid-endpoint"]
+            }
+          }
+        },
+        {
+          "name": "11.2 Malformed JSON (Check Error Messages)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{ access_token }}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{invalid json"
+            },
+            "url": {
+              "raw": "http://192.168.1.191:8000/api/v1/notes",
+              "protocol": "http",
+              "host": ["192", "168", "1", "191"],
+              "port": "8000",
+              "path": ["api", "v1", "notes"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "note_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
