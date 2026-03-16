@@ -1,9 +1,7 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, TYPOGRAPHY } from '@constants';
 import { formatters } from '@utils/formatters';
-import { RectButton, Swipeable } from 'react-native-gesture-handler';
 import Card from '../ui/Card';
 
 interface NoteCardProps {
@@ -21,52 +19,30 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onPress,
   onDelete,
 }) => {
-  const swipeableRef = React.useRef<Swipeable | null>(null);
-
-  const renderRightActions = () => {
-    return (
-      <RectButton style={styles.deleteButton} onPress={handleDelete}>
-        <MaterialCommunityIcons name="trash-can" size={24} color={COLORS.textPrimary} />
-      </RectButton>
-    );
-  };
-
-  const handleDelete = () => {
-    swipeableRef.current?.close();
-    onDelete();
-  };
+  void onDelete;
 
   const preview = formatters.truncateLines(body, 2);
 
   return (
-    <Swipeable
-      ref={swipeableRef}
-      renderRightActions={renderRightActions}
-      rightThreshold={40}
-      activeOffsetX={{ right: 20 }}
-      activeOffsetY={[-5, 5]}
-      friction={2}
-    >
-      <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-        <Card style={styles.card}>
-          <View style={styles.container}>
-            <View style={styles.accentBar} />
+    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+      <Card style={styles.card}>
+        <View style={styles.container}>
+          <View style={styles.accentBar} />
 
-            <View style={styles.content}>
-              <Text style={styles.title} numberOfLines={1}>
-                {title || 'Untitled'}
-              </Text>
+          <View style={styles.content}>
+            <Text style={styles.title} numberOfLines={1}>
+              {title || 'Untitled'}
+            </Text>
 
-              <Text style={styles.preview} numberOfLines={2}>
-                {preview || 'Empty note'}
-              </Text>
-            </View>
-
-            <Text style={styles.date}>{formatters.formatDate(updatedAt)}</Text>
+            <Text style={styles.preview} numberOfLines={2}>
+              {preview || 'Empty note'}
+            </Text>
           </View>
-        </Card>
-      </Pressable>
-    </Swipeable>
+
+          <Text style={styles.date}>{formatters.formatDate(updatedAt)}</Text>
+        </View>
+      </Card>
+    </Pressable>
   );
 };
 
@@ -108,14 +84,6 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
     marginLeft: SPACING.md,
-  },
-  deleteButton: {
-    backgroundColor: COLORS.destructive,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.md,
-    borderRadius: 12,
   },
 });
 

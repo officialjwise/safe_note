@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { TypedUseSelectorHook } from 'react-redux';
 import type { RootState, AppDispatch } from '@store';
@@ -17,25 +18,25 @@ export const useAuth = () => {
   const dispatch = useAppDispatch();
   const { user, isAuthenticated, loading, error } = useAppSelector((state) => state.auth);
 
-  const login = (credentials: LoginRequest) => {
+  const login = useCallback((credentials: LoginRequest) => {
     return dispatch(loginThunk(credentials));
-  };
+  }, [dispatch]);
 
-  const register = (credentials: RegisterRequest) => {
+  const register = useCallback((credentials: RegisterRequest) => {
     return dispatch(registerThunk(credentials));
-  };
+  }, [dispatch]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     return dispatch(logoutThunk());
-  };
+  }, [dispatch]);
 
-  const checkAuth = () => {
+  const checkAuth = useCallback(() => {
     return dispatch(checkAuthThunk());
-  };
+  }, [dispatch]);
 
-  const clearErrorMessage = () => {
+  const clearErrorMessage = useCallback(() => {
     dispatch(clearError());
-  };
+  }, [dispatch]);
 
   return {
     user,

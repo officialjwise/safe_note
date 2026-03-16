@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '@store';
 import {
@@ -18,37 +19,37 @@ export const useNotes = () => {
     (state: RootState) => state.notes
   );
 
-  const fetchNotes = () => {
+  const fetchNotes = useCallback(() => {
     return dispatch(fetchNotesThunk());
-  };
+  }, [dispatch]);
 
-  const createNote = (noteData: CreateNoteRequest) => {
+  const createNote = useCallback((noteData: CreateNoteRequest) => {
     return dispatch(createNoteThunk(noteData));
-  };
+  }, [dispatch]);
 
-  const updateNote = (id: string, noteData: UpdateNoteRequest) => {
+  const updateNote = useCallback((id: string, noteData: UpdateNoteRequest) => {
     return dispatch(updateNoteThunk({ id, noteData }));
-  };
+  }, [dispatch]);
 
-  const deleteNote = (id: string) => {
+  const deleteNote = useCallback((id: string) => {
     return dispatch(deleteNoteThunk(id));
-  };
+  }, [dispatch]);
 
-  const searchNotes = (query: string) => {
+  const searchNotes = useCallback((query: string) => {
     if (!query.trim()) {
       dispatch(clearSearchResults());
       return Promise.resolve();
     }
     return dispatch(searchNotesThunk(query));
-  };
+  }, [dispatch]);
 
-  const handleSelectNote = (note: any) => {
+  const handleSelectNote = useCallback((note: any) => {
     dispatch(setSelectedNote(note));
-  };
+  }, [dispatch]);
 
-  const handleClearSelectedNote = () => {
+  const handleClearSelectedNote = useCallback(() => {
     dispatch(clearSelectedNote());
-  };
+  }, [dispatch]);
 
   return {
     notes,
